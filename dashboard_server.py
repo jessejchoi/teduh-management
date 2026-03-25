@@ -24,13 +24,16 @@ from fastapi.staticfiles import StaticFiles
 DB_PATH = Path(__file__).parent / "comp_data.db"
 DIST_PATH = Path(__file__).parent / "dist"
 API_KEY = os.environ.get("API_KEY", "dev-key")
+IS_VERCEL = bool(os.environ.get("VERCEL"))
 
 # ─────────────────────────────────────────────────────
 # Startup
 # ─────────────────────────────────────────────────────
 
 def _run_startup_migrations():
-    """Create performance indexes if missing."""
+    """Create performance indexes if missing. Skip on Vercel (read-only FS)."""
+    if IS_VERCEL:
+        return
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute(
@@ -80,8 +83,12 @@ def verify_token(request: Request):
 
 @contextmanager
 def get_db():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.execute("PRAGMA journal_mode=WAL")
+    if IS_VERCEL:
+        # Read-only URI connection — Vercel filesystem is immutable
+        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True, check_same_thread=False)
+    else:
+        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = sqlite3.Row
     try:
         yield conn
