@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env.local
+*.db-shm
+*.db-wal
+__pycache__/
+.pytest_cache/
+*.pyc
+exports/*.csv
+logs/
+debug_screenshot*.png
