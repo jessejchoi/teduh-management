@@ -84,8 +84,8 @@ def verify_token(request: Request):
 @contextmanager
 def get_db():
     if IS_VERCEL:
-        # Read-only URI connection — Vercel filesystem is immutable
-        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True, check_same_thread=False)
+        # immutable=1 tells SQLite the file is on read-only media — no locking or WAL writes attempted
+        conn = sqlite3.connect(f"file://{DB_PATH}?immutable=1", uri=True, check_same_thread=False)
     else:
         conn = sqlite3.connect(DB_PATH, check_same_thread=False)
         conn.execute("PRAGMA journal_mode=WAL")
