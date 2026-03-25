@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { apiFetch } from '../api.js'
-import { useFilters, COLORS, SEG_COLORS } from '../App.jsx'
+import { useFilters } from '../App.jsx'
+import { COLORS, SEG_COLORS } from '../constants.js'
 import { Card, SectionTitle, Empty, Loading, ErrorMsg, TierBadge } from './ui.jsx'
 
 function WoWBadge({ pct }) {

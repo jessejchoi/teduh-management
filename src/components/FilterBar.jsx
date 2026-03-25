@@ -1,4 +1,5 @@
-import { useFilters, COLORS } from '../App.jsx'
+import { useFilters } from '../App.jsx'
+import { COLORS } from '../constants.js'
 
 const selectStyle = {
   marginLeft: 6, background: COLORS.surface2, color: COLORS.text,

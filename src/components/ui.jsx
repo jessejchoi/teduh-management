@@ -1,5 +1,5 @@
 // Shared UI primitives used across all tab components
-import { COLORS, TIER_COLORS } from '../App.jsx'
+import { COLORS, TIER_COLORS } from '../constants.js'
 
 export const Card = ({ children, style }) => (
   <div style={{

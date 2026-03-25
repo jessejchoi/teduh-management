@@ -5,7 +5,8 @@ import {
   ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
 import { apiFetch } from '../api.js'
-import { useFilters, COLORS, PALETTE } from '../App.jsx'
+import { useFilters } from '../App.jsx'
+import { COLORS, PALETTE } from '../constants.js'
 import { Card, SectionTitle, Empty, Loading, ErrorMsg } from './ui.jsx'
 import { PctTooltip, CustomTooltip } from './ui.jsx'
 

@@ -4,7 +4,8 @@ import {
   Tooltip, Legend, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import { apiFetch } from '../api.js'
-import { useFilters, COLORS, SEG_COLORS } from '../App.jsx'
+import { useFilters } from '../App.jsx'
+import { COLORS, SEG_COLORS } from '../constants.js'
 import { Card, SectionTitle, Empty, Loading, ErrorMsg } from './ui.jsx'
 import { PctTooltip, CustomTooltip } from './ui.jsx'
 

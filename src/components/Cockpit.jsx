@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { apiFetch } from '../api.js'
-import { useFilters, COLORS, SEG_COLORS } from '../App.jsx'
+import { useFilters } from '../App.jsx'
+import { COLORS, SEG_COLORS } from '../constants.js'
 import { Card, StatCard, Empty, Loading, ErrorMsg, SectionTitle } from './ui.jsx'
 
 function AlertCard({ alerts }) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { apiFetch } from '../api.js'
-import { COLORS } from '../App.jsx'
+import { COLORS } from '../constants.js'
 import { Card, SectionTitle, Empty, Loading, ErrorMsg, StatCard } from './ui.jsx'
 
 function SetupInstructions() {
