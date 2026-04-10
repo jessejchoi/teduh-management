@@ -102,6 +102,20 @@ export default function Cockpit() {
             />
           )
         })}
+        {segs.map(seg => {
+          const mr = data?.market_rates?.[seg]
+          if (!mr || mr.weekend_premium_pct == null) return null
+          const prem = mr.weekend_premium_pct
+          return (
+            <StatCard
+              key={`${seg}-we-prem`}
+              label={`${seg.replace('bed', '-Bed')} we premium`}
+              value={`+${prem.toFixed(1)}%`}
+              sub={`n=${mr.weekend_premium_n} paired`}
+              color={COLORS.text}
+            />
+          )
+        })}
         {data?.occupancy_pulse?.avg_occ_pct != null && (
           <StatCard
             label="T1 Occ (7d)"
@@ -122,7 +136,7 @@ export default function Cockpit() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                 <thead>
                   <tr>
-                    {['Segment', 'Tier', 'Weekday', 'Weekend', 'Spread', 'N'].map(h => (
+                    {['Segment', 'Tier', 'Weekday', 'Weekend', 'We Premium', 'Floor', 'Ceiling', 'Avg ★', 'N'].map(h => (
                       <th key={h} style={{
                         textAlign: 'left', padding: '6px 10px',
                         borderBottom: `1px solid ${COLORS.border}`,
@@ -136,25 +150,37 @@ export default function Cockpit() {
                   {Object.entries(overview.segments).flatMap(([seg, tiers]) =>
                     Object.entries(tiers)
                       .filter(([t]) => tier === 'all' || t === tier)
-                      .map(([t, d]) => (
-                        <tr key={`${seg}-${t}`} style={{ borderBottom: `1px solid ${COLORS.border}22` }}>
-                          <td style={{ padding: '5px 10px', color: SEG_COLORS[seg] || COLORS.text }}>
-                            {seg.replace('bed', '-Bed')}
-                          </td>
-                          <td style={{ padding: '5px 10px', fontFamily: 'monospace', fontSize: '0.72rem' }}>T{t}</td>
-                          <td style={{ padding: '5px 10px', fontFamily: 'monospace', fontWeight: 600 }}>
-                            {d.weekday ? `$${d.weekday}` : '—'}
-                          </td>
-                          <td style={{ padding: '5px 10px', fontFamily: 'monospace' }}>
-                            {d.weekend ? `$${d.weekend}` : '—'}
-                          </td>
-                          <td style={{ padding: '5px 10px', fontFamily: 'monospace', color: COLORS.muted }}>
-                            {d.spread != null ? `+${d.spread}%` : '—'}
-                          </td>
-                          <td style={{ padding: '5px 10px', color: COLORS.muted }}>{d.count}</td>
-                        </tr>
-                      ))
-                  )}
+                      .map(([t, d]) => {
+                        const mr = data?.market_rates?.[seg]
+                        return (
+                          <tr key={`${seg}-${t}`} style={{ borderBottom: `1px solid ${COLORS.border}22` }}>
+                            <td style={{ padding: '5px 10px', color: SEG_COLORS[seg] || COLORS.text }}>
+                              {seg.replace('bed', '-Bed')}
+                            </td>
+                            <td style={{ padding: '5px 10px', fontFamily: 'monospace', fontSize: '0.72rem' }}>T{t}</td>
+                            <td style={{ padding: '5px 10px', fontFamily: 'monospace', fontWeight: 600 }}>
+                              {d.weekday ? `$${d.weekday}` : '—'}
+                            </td>
+                            <td style={{ padding: '5px 10px', fontFamily: 'monospace' }}>
+                              {d.weekend ? `$${d.weekend}` : '—'}
+                            </td>
+                            <td style={{ padding: '5px 10px', fontFamily: 'monospace', color: COLORS.muted }}>
+                              {mr?.weekend_premium_pct != null ? `+${mr.weekend_premium_pct.toFixed(1)}%` : '—'}
+                            </td>
+                            <td style={{ padding: '5px 10px', fontFamily: 'monospace', color: COLORS.muted }}>
+                              {mr?.min_wd ? `$${mr.min_wd}` : '—'}
+                            </td>
+                            <td style={{ padding: '5px 10px', fontFamily: 'monospace', color: COLORS.muted }}>
+                              {mr?.max_wd ? `$${mr.max_wd}` : '—'}
+                            </td>
+                            <td style={{ padding: '5px 10px', color: COLORS.muted }}>
+                              {mr?.avg_rating != null ? mr.avg_rating : '—'}
+                            </td>
+                            <td style={{ padding: '5px 10px', color: COLORS.muted }}>{d.count}</td>
+                          </tr>
+                        )
+                      }))
+                  }
                 </tbody>
               </table>
             </div>
@@ -165,10 +191,9 @@ export default function Cockpit() {
       </div>
 
       {/* Data quality note */}
-      {data?.market_rates && Object.values(data.market_rates).some(r => r.wow_pct != null) && (
+      {data?.market_rates && Object.values(data.market_rates).some(r => r.wow_pct != null || r.weekend_premium_pct != null) && (
         <div style={{ color: COLORS.muted, fontSize: '0.7rem', marginTop: '0.5rem' }}>
-          WoW % uses paired cohort analysis — only listings with data on both days counted.
-          n = listings in cohort.
+          WoW % and We Premium use paired cohort analysis — only listings with data on both days/labels counted. n = listings in cohort.
         </div>
       )}
     </div>

@@ -200,7 +200,49 @@ def get_cockpit(
                     "weekend": int(row[2]) if row[2] else None,
                     "n": row[3],
                     "wow_pct": None,  # filled below
+                    "weekend_premium_pct": None,  # filled below
+                    "weekend_premium_n": None,
                 }
+
+            # ── Paired weekend premium % (per-listing wd→we %, then averaged) ──
+            c.execute(f"""
+                SELECT l.segment, p_wd.nightly_rate as wd_rate, p_we.nightly_rate as we_rate
+                FROM listings l
+                JOIN price_snapshots p_wd ON p_wd.listing_id = l.listing_id
+                    AND p_wd.scrape_date = ? AND p_wd.scrape_label = 'weekday'
+                    AND p_wd.nightly_rate IS NOT NULL
+                JOIN price_snapshots p_we ON p_we.listing_id = l.listing_id
+                    AND p_we.scrape_date = ? AND p_we.scrape_label = 'weekend'
+                    AND p_we.nightly_rate IS NOT NULL
+                WHERE 1=1 {extra}
+            """, [latest, latest] + params)
+            seg_pairs: dict[str, list] = defaultdict(list)
+            for row in c.fetchall():
+                pct = (row["we_rate"] - row["wd_rate"]) / row["wd_rate"] * 100
+                seg_pairs[row["segment"]].append(pct)
+            for seg, pcts in seg_pairs.items():
+                if seg in market_rates:
+                    market_rates[seg]["weekend_premium_pct"] = round(sum(pcts) / len(pcts), 1)
+                    market_rates[seg]["weekend_premium_n"] = len(pcts)
+
+            # ── Market floor, ceiling, avg rating (weekday only, one row per listing) ──
+            c.execute(f"""
+                SELECT l.segment,
+                    MIN(p.nightly_rate) as min_wd,
+                    MAX(p.nightly_rate) as max_wd,
+                    ROUND(AVG(l.rating), 1) as avg_rating
+                FROM price_snapshots p
+                JOIN listings l ON p.listing_id = l.listing_id
+                WHERE p.scrape_date = ? AND p.scrape_label = 'weekday'
+                  AND p.nightly_rate IS NOT NULL {extra}
+                GROUP BY l.segment
+            """, [latest] + params)
+            for row in c.fetchall():
+                seg = row["segment"]
+                if seg in market_rates:
+                    market_rates[seg]["min_wd"] = int(row["min_wd"]) if row["min_wd"] else None
+                    market_rates[seg]["max_wd"] = int(row["max_wd"]) if row["max_wd"] else None
+                    market_rates[seg]["avg_rating"] = row["avg_rating"]
 
         # ── WoW paired % ──
         if latest:
@@ -241,8 +283,8 @@ def get_cockpit(
                 JOIN price_snapshots p1 ON p1.listing_id = l.listing_id
                     AND p1.scrape_date = ? AND p1.scrape_label = 'weekday'
                 WHERE p0.nightly_rate IS NOT NULL AND p1.nightly_rate IS NOT NULL
+                  AND (p1.nightly_rate - p0.nightly_rate) / p0.nightly_rate * 100 < -20
                   {extra2}
-                HAVING (r1 - r0) / r0 * 100 < -20
             """, [t0, t1] + params2)
             for row in c.fetchall():
                 pct = round((row["r1"] - row["r0"]) / row["r0"] * 100, 1)

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "dev:all": "concurrently -k -n API,UI -c cyan,green \"uvicorn dashboard_server:app --reload --port 5001\" \"vite\""
+    "dev:all": "concurrently -k -n API,UI -c cyan,green \"python3 -m uvicorn dashboard_server:app --reload --port 5001\" \"vite\""
   },
   "dependencies": {
     "react": "^18.3.1",
