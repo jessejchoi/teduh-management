@@ -417,13 +417,28 @@ def get_trends(
 
         segs = [segment] if segment else ["3bed", "4bed", "6bed"]
 
-        pct_series = []   # [{date, 3bed: pct, 4bed: pct, ...}]
-        rate_series = []  # [{date, 3bed: avg_rate, ...}]
+        pct_series = []   # [{date, scrape_date, checkin_date, 3bed: pct, 4bed: pct, ...}]
+        rate_series = []  # [{date, scrape_date, checkin_date, 3bed: avg_rate, ...}]
 
         for i in range(1, len(dates)):
             t0, t1 = dates[i - 1], dates[i]
-            pct_entry = {"date": t1}
-            rate_entry = {"date": t1}
+            sample_seg = next((seg for seg in segs if wd_data[t1].get(seg)), None)
+            sample_listing = next(iter(wd_data[t1].get(sample_seg, {})), None) if sample_seg else None
+            checkin_date = None
+            if sample_listing:
+                c.execute("""
+                    SELECT checkin_date
+                    FROM price_snapshots
+                    WHERE scrape_label = 'weekday'
+                      AND scrape_date = ?
+                      AND listing_id = ?
+                    LIMIT 1
+                """, [t1, sample_listing])
+                row = c.fetchone()
+                checkin_date = row["checkin_date"] if row else None
+
+            pct_entry = {"date": t1, "scrape_date": t1, "checkin_date": checkin_date}
+            rate_entry = {"date": t1, "scrape_date": t1, "checkin_date": checkin_date}
 
             for seg in segs:
                 r0 = wd_data[t0].get(seg, {})
@@ -436,7 +451,22 @@ def get_trends(
             rate_series.append(rate_entry)
 
         # Also prepend the first date's absolute rates for the rate chart
-        first = {"date": dates[0]}
+        first_checkin = None
+        first_seg = next((seg for seg in segs if wd_data[dates[0]].get(seg)), None)
+        first_listing = next(iter(wd_data[dates[0]].get(first_seg, {})), None) if first_seg else None
+        if first_listing:
+            c.execute("""
+                SELECT checkin_date
+                FROM price_snapshots
+                WHERE scrape_label = 'weekday'
+                  AND scrape_date = ?
+                  AND listing_id = ?
+                LIMIT 1
+            """, [dates[0], first_listing])
+            row = c.fetchone()
+            first_checkin = row["checkin_date"] if row else None
+
+        first = {"date": dates[0], "scrape_date": dates[0], "checkin_date": first_checkin}
         for seg in segs:
             r = wd_data[dates[0]].get(seg, {})
             first[seg] = round(sum(r.values()) / len(r)) if r else None

@@ -7,6 +7,7 @@ import SeasonalsLeadtime from './components/SeasonalsLeadtime.jsx'
 import Discounts from './components/Discounts.jsx'
 import Comps from './components/Comps.jsx'
 import MyProperties from './components/MyProperties.jsx'
+import Scrapes from './components/Scrapes.jsx'
 import { COLORS } from './constants.js'
 
 export const FilterContext = createContext({ segment: 'all', tier: 'all' })
@@ -20,6 +21,7 @@ const TABS = [
   ['discounts', 'Discounts'],
   ['comps', 'Comp Table'],
   ['properties', 'My Properties'],
+  ['scrapes', 'Scrapes'],
 ]
 
 const TAB_COMPONENTS = {
@@ -30,6 +32,7 @@ const TAB_COMPONENTS = {
   discounts: Discounts,
   comps: Comps,
   properties: MyProperties,
+  scrapes: Scrapes,
 }
 
 export default function App() {
