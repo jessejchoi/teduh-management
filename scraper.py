@@ -10,13 +10,13 @@ SETUP:
     python3 -m playwright install chromium
 
 TEST:
-    python3 scraper_v2.py test 7816774
-    python3 scraper_v2.py test 740740767777327164
+    python3 scraper.py test 7816774
+    python3 scraper.py test 740740767777327164
 
 USAGE:
-    python3 scraper_v2.py daily
-    python3 scraper_v2.py export
-    python3 scraper_v2.py dashboard
+    python3 scraper.py daily
+    python3 scraper.py export
+    python3 scraper.py dashboard
 """
 
 import json
@@ -1026,7 +1026,7 @@ def run_test(listing_id):
     print(f"\n{'='*60}")
     if result['nightly_rate']:
         print("SUCCESS — Price extraction is working!")
-        print(f"You can now run: python3 scraper_v2.py daily")
+        print(f"You can now run: python3 scraper.py daily")
     else:
         print("PRICE NOT FOUND — Check the screenshot to see what Airbnb showed.")
         print("Possible issues:")
@@ -2372,7 +2372,7 @@ def print_dashboard():
     latest = c.execute("SELECT MAX(scrape_date) FROM price_snapshots").fetchone()[0]
 
     if not latest:
-        print("No data yet. Run: python3 scraper_v2.py test 7816774")
+        print("No data yet. Run: python3 scraper.py test 7816774")
         return
 
     print(f"\n{'='*70}")
@@ -2498,19 +2498,20 @@ def print_occupancy():
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  python3 scraper_v2.py test <listing_id>   # Test single listing")
-        print("  python3 scraper_v2.py test-all             # Quick test all modes (2 comps each, ~10 min)")
-        print("  python3 scraper_v2.py test-all <listing_id>  # Test all modes on one specific comp")
-        print("  python3 scraper_v2.py daily                # Weekday + weekend rates + occupancy check")
-        print("  python3 scraper_v2.py discounts            # 3n/7n/28n rates for T1+T2 (monthly)")
-        print("  python3 scraper_v2.py seasonal             # Rates across 6 seasons for T1+T2 (monthly)")
-        print("  python3 scraper_v2.py leadtime             # Rates at 3d/14d/30d + tracking dates (weekly)")
-        print("  python3 scraper_v2.py full                 # All modes in one run (~2.5 hrs)")
-        print("  python3 scraper_v2.py export               # Export all data to CSV")
-        print("  python3 scraper_v2.py dashboard            # Print pricing summary")
-        print("  python3 scraper_v2.py occupancy            # Print occupancy summary (needs 7+ days of daily data)")
+        print("  python3 scraper.py test <listing_id>       # Test single listing")
+        print("  python3 scraper.py test-all                # Quick test all modes (2 comps each, ~10 min)")
+        print("  python3 scraper.py test-all <listing_id>   # Test all modes on one specific comp")
+        print("  python3 scraper.py daily                   # Weekday + weekend rates + occupancy check")
+        print("  python3 scraper.py discounts               # 3n/7n/28n rates for T1+T2")
+        print("  python3 scraper.py seasonal                # Rates across 6 seasons for T1+T2")
+        print("  python3 scraper.py leadtime                # Rates at 3d/14d/30d + tracking dates")
+        print("  python3 scraper.py minstay                 # Audit listing minimum-stay requirements")
+        print("  python3 scraper.py full                    # Run daily + discounts + seasonal + leadtime")
+        print("  python3 scraper.py export                  # Export all data to CSV")
+        print("  python3 scraper.py dashboard               # Print pricing summary")
+        print("  python3 scraper.py occupancy               # Print occupancy summary (needs 7+ days of daily data)")
         print("")
-        print("Start with: python3 scraper_v2.py test 7816774")
+        print("Start with: python3 scraper.py test 7816774")
         sys.exit(1)
 
     mode = sys.argv[1].lower()

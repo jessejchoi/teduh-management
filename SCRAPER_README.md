@@ -10,23 +10,27 @@ pip install playwright
 playwright install chromium
 
 # 3. Test with a single listing first
-python scraper.py single 7816774
+python3 scraper.py test 7816774
 
 # 4. If that works, run your first daily scrape
-python scraper.py daily
+python3 scraper.py daily
 ```
 
 ## What each mode does
 
 | Command | What it scrapes | Comps | Time estimate |
 |---|---|---|---|
-| `python scraper.py daily` | Weekday + weekend rate (~2 weeks out, 3-night stay) | All 56 | ~25–40 min |
-| `python scraper.py weekly` | Full price matrix (10 date/length combos) + occupancy calendar | T1 prices (22) + all occupancy (56) | ~60–90 min |
-| `python scraper.py monthly` | Full price matrix + occupancy for ALL comps | All 56 | ~90–120 min |
-| `python scraper.py single <ID>` | Quick test of one listing | 1 | ~2 min |
-| `python scraper.py export` | Dump all data to CSV files in /exports | — | instant |
-| `python scraper.py dashboard` | Print pricing summary to terminal | — | instant |
-| `python scraper.py occupancy` | Print occupancy summary to terminal | — | instant |
+| `python3 scraper.py daily` | Weekday + weekend rate (~2 weeks out, 3-night stay) + daily occupancy check | Active comp set | ~25–40 min |
+| `python3 scraper.py discounts` | 3-night, 7-night, and 28-night rates to measure weekly/monthly discounts | T1+T2 active comps | ~60–90 min |
+| `python3 scraper.py seasonal` | Rates across 6 seasonal windows | T1+T2 active comps | ~90–120 min |
+| `python3 scraper.py leadtime` | Rates at 3d/14d/30d plus fixed tracking dates | T1+T2 active comps | ~60–90 min |
+| `python3 scraper.py full` | Runs `daily`, `discounts`, `seasonal`, and `leadtime` in one job | Combined run | ~2.5–3 hrs |
+| `python3 scraper.py minstay` | Minimum-stay audit pass | Audit run | varies |
+| `python3 scraper.py test <ID>` | Quick test of one listing | 1 | ~2 min |
+| `python3 scraper.py test-all [ID]` | Run main modes on a 2-comp sample, or one specific listing | 2 comps by default | ~10–15 min |
+| `python3 scraper.py export` | Dump all data to CSV files in /exports | — | instant |
+| `python3 scraper.py dashboard` | Print pricing summary to terminal | — | instant |
+| `python3 scraper.py occupancy` | Print occupancy summary to terminal | — | instant |
 
 ## Automate with cron
 
@@ -38,11 +42,14 @@ crontab -e
 # Daily at 6am Bali time (WITA = UTC+8)
 0 6 * * * cd /path/to/scraper && python3 scraper.py daily >> logs/daily.log 2>&1
 
-# Weekly full scan every Monday at 7am
-0 7 * * 1 cd /path/to/scraper && python3 scraper.py weekly >> logs/weekly.log 2>&1
+# Weekly lead-time scan every Monday at 7am
+0 7 * * 1 cd /path/to/scraper && python3 scraper.py leadtime >> logs/leadtime.log 2>&1
 
-# Monthly comprehensive scan on the 1st at 5am
-0 5 1 * * cd /path/to/scraper && python3 scraper.py monthly >> logs/monthly.log 2>&1
+# Monthly discount scan on the 1st at 5am
+0 5 1 * * cd /path/to/scraper && python3 scraper.py discounts >> logs/discounts.log 2>&1
+
+# Monthly seasonal scan on the 1st at 6am
+0 6 1 * * cd /path/to/scraper && python3 scraper.py seasonal >> logs/seasonal.log 2>&1
 ```
 
 ## Where data lives
@@ -74,7 +81,7 @@ Calendar-based occupancy estimates. Fields:
 - `days_available` / `days_blocked` / `total_days`
 - `occupancy_pct` — blocked/total × 100
 
-## Price matrix labels (weekly/monthly scrapes)
+## Price matrix labels
 
 | Label | Check-in | Nights | Purpose |
 |---|---|---|---|
