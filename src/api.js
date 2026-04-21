@@ -11,6 +11,7 @@ function buildParams(filters = {}) {
       params.set(key, val)
     }
   }
+  params.set('api_key', API_KEY)
   const str = params.toString()
   return str ? `?${str}` : ''
 }

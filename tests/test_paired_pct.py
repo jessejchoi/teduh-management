@@ -6,11 +6,13 @@ Run with: pytest tests/
 """
 import sqlite3
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 # Allow importing dashboard_server from project root
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import dashboard_server
 from dashboard_server import _paired_pct
 
 
@@ -100,3 +102,74 @@ def test_empty_cohort():
     result = _paired_pct({"A": 200.0}, {"B": 300.0})
     assert result["pct_change"] is None
     assert result["n"] == 0
+
+
+def test_get_trends_returns_series_instead_of_500(monkeypatch):
+    """Regression: get_trends must not crash when it looks up checkin dates."""
+    conn = make_db()
+    conn.row_factory = sqlite3.Row
+    conn.executemany(
+        """
+        INSERT INTO listings (listing_id, name, segment, tier, url, rating, review_count, superhost, last_scraped, min_stay)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            ("A", "Villa A", "3bed", 1, "https://example.com/a", 4.9, 10, 1, "2026-04-20", 2),
+            ("B", "Villa B", "3bed", 1, "https://example.com/b", 4.8, 8, 0, "2026-04-20", 2),
+        ],
+    )
+    conn.executemany(
+        """
+        INSERT INTO price_snapshots (
+            listing_id, scrape_date, scrape_label, checkin_date, nights,
+            nightly_rate, total_price, is_available, min_nights, currency
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            ("A", "2026-04-20", "weekday", "2026-05-01", 2, 200.0, 400.0, 1, 2, "USD"),
+            ("B", "2026-04-20", "weekday", "2026-05-01", 2, 100.0, 200.0, 1, 2, "USD"),
+            ("A", "2026-04-21", "weekday", "2026-05-01", 2, 220.0, 440.0, 1, 2, "USD"),
+            ("B", "2026-04-21", "weekday", "2026-05-01", 2, 90.0, 180.0, 1, 2, "USD"),
+        ],
+    )
+
+    @contextmanager
+    def fake_get_db():
+        try:
+            yield conn
+        finally:
+            pass
+
+    monkeypatch.setattr(dashboard_server, "get_db", fake_get_db)
+
+    payload = dashboard_server.get_trends()
+    assert payload["pct_series"] == [
+        {
+            "date": "2026-04-21",
+            "scrape_date": "2026-04-21",
+            "checkin_date": "2026-05-01",
+            "3bed": 0.0,
+            "4bed": None,
+            "6bed": None,
+        }
+    ]
+    assert payload["rate_series"] == [
+        {
+            "date": "2026-04-20",
+            "scrape_date": "2026-04-20",
+            "checkin_date": "2026-05-01",
+            "3bed": 150,
+            "4bed": None,
+            "6bed": None,
+        },
+        {
+            "date": "2026-04-21",
+            "scrape_date": "2026-04-21",
+            "checkin_date": "2026-05-01",
+            "3bed": 155,
+            "4bed": None,
+            "6bed": None,
+        },
+    ]
+    conn.close()

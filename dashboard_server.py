@@ -71,9 +71,11 @@ app.add_middleware(
 
 def verify_token(request: Request):
     auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
+    query_token = request.query_params.get("api_key", "")
+    token = auth[7:] if auth.startswith("Bearer ") else query_token
+    if not token:
         raise HTTPException(status_code=401, detail="Missing auth token")
-    if auth[7:] != API_KEY:
+    if token != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
@@ -409,6 +411,7 @@ def get_trends(
     Also returns absolute T1 weekday avg series (point-in-time, labeled as such).
     """
     with get_db() as conn:
+        c = conn.cursor()
         wd_data = _fetch_weekday_prices(conn, segment, tier)
         dates = sorted(wd_data.keys())
 
