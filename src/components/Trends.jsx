@@ -118,9 +118,9 @@ export default function Trends() {
             </div>
             <Card>
               <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={pctSeries}>
+                <LineChart key={`pct-${pctDateMode}`} data={pctSeries}>
                   <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
-                  <XAxis dataKey={pctDateMode} tick={{ fill: COLORS.muted, fontSize: 11 }}
+                  <XAxis key={pctDateMode} dataKey={pctDateMode} tick={{ fill: COLORS.muted, fontSize: 11 }}
                     tickFormatter={formatShortDate} />
                   <YAxis tick={{ fill: COLORS.muted, fontSize: 11 }}
                     tickFormatter={v => v != null ? `${v > 0 ? '+' : ''}${v.toFixed(1)}%` : '—'} />
@@ -158,9 +158,9 @@ export default function Trends() {
             </div>
             <Card>
               <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={rateSeries}>
+                <LineChart key={`rate-${rateDateMode}`} data={rateSeries}>
                   <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
-                  <XAxis dataKey={rateDateMode} tick={{ fill: COLORS.muted, fontSize: 11 }}
+                  <XAxis key={rateDateMode} dataKey={rateDateMode} tick={{ fill: COLORS.muted, fontSize: 11 }}
                     tickFormatter={formatShortDate} />
                   <YAxis tick={{ fill: COLORS.muted, fontSize: 11 }}
                     tickFormatter={v => `$${Math.round(v)}`} />
